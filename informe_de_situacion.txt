@@ -1,0 +1,22 @@
+
+===========================================================
+                INFORME DE SITUACIÓN - AEMET
+===========================================================
+
+📍 Fecha del informe: 2026-04-14
+
+-----------------------------------------------------------
+Dato Analizado                         Valor / Resultado
+-----------------------------------------------------------
+
+Ciudad con Máxima:                      TENERIFE/SUR (19.4°C)
+Ciudad con Mínima:                      TENERIFE/LOS RODEOS (11.4°C)
+
+Tendencia IA:                           Ascendente (1.33 °C/h)
+Predicción para +1 hora:                24.12°C
+
+Estado de Alerta:                       ☑ Sin alertas
+
+Recomendación:                          🔥 ¡Cuidado! El calor está subiendo rápidamente. Hidrátate y busca sombra.
+
+===========================================================
