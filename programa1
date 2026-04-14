@@ -1,4 +1,4 @@
- # -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # PREPARACIÓN: Darle al robot las herramientas que necesita
 # -------------------------------------------------------------------------
 
@@ -61,6 +61,9 @@ import pandas as pd
 # Importante: verifica que 'Tenerife' esté escrito exactamente igual en tu tabla
 datos_tenerife = tabla_clima[tabla_clima['ubi'].str.contains('Tenerife', case=False)].copy()
 
+# VERIFICA Y CREA tenerife_data AQUI para que esté disponible para el siguiente bloque de código
+tenerife_data = datos_tenerife.copy()
+
 # Verificación rápida: si no hay datos, el gráfico saldrá en blanco
 if datos_tenerife.empty:
     print("❌ Error: No hay datos para 'Tenerife'. Revisa el nombre en la columna 'ubi'.")
@@ -91,8 +94,8 @@ else:
     plt.ylabel('Grados Celsius (°C)')
     plt.xlabel('Número de medición')
 
-# Guardar la imagen
-plt.savefig("grafica_temperatura_Tenerife.png", dpi=300, bbox_inches='tight')
+    # Guardar la imagen
+    plt.savefig("grafica_temperatura_Tenerife.png", dpi=300, bbox_inches='tight')
 
     # --- PASO CLAVE PARA VISUALIZACIÓN ---
     plt.show() # Obliga a Python a mostrar el dibujo aquí mismo
@@ -138,7 +141,7 @@ tabla_clima.to_csv(nombre_archivo, index=False)
 print(f"✅ Robot: ¡Misión cumplida! He guardado los datos en '{nombre_archivo}'")
 
 # 1. Filtramos los datos para obtener solo las estaciones de Tenerife
-tenerife_data = tabla_clima[tabla_clima['ubi'].str.contains('Tenerife', case=False)]
+# tenerife_data = tabla_clima[tabla_clima['ubi'].str.contains('Tenerife', case=False)] # Esta línea ahora es redundante y se puede quitar si la anterior es suficiente
 
 # 2. Encontrar la temperatura más alta y la más baja de las estaciones de Tenerife
 temp_maxima_tenerife = tenerife_data['ta'].max()
@@ -164,45 +167,7 @@ resumen_ciudades = tenerife_data.groupby('ubi')['ta'].agg(['max', 'min'])
 print("📋 Resumen de extremos por cada ciudad de Tenerife:")
 print(resumen_ciudades)
 
-import matplotlib.pyplot as plt
 
-
-# 2. Preparamos una muestra de datos (las primeras 15 estaciones de Tenerife)
-muestra_grafico = tenerife_data.head(200).copy()
-
-# 3. Calculamos quién es el máximo y el mínimo en esta muestra
-max_ta = muestra_grafico['ta'].max()
-min_ta = muestra_grafico['ta'].min()
-
-# 4. Creamos una lista de colores
-colores = []
-for temperatura in muestra_grafico['ta']:
-    if temperatura == max_ta:
-        colores.append('red')      # Máximo
-    elif temperatura == min_ta:
-        colores.append('blue')     # Mínimo
-    else:
-        colores.append('lightgrey')  # Resto
-
-# 5. Dibujamos el lienzo
-plt.figure(figsize=(14, 7))
-
-# 6. Gráfico de barras
-plt.bar(muestra_grafico['ubi'], muestra_grafico['ta'], color=colores)
-
-# 7. Títulos y etiquetas
-plt.title('Comparativa de Temperaturas en Tenerife: Identificando Extremos', fontsize=16, fontweight='bold')
-plt.ylabel('Temperatura (°C)', fontsize=12)
-plt.xlabel('Estaciones Meteorológicas', fontsize=12)
-plt.xticks(rotation=45, ha='right')
-
-# 8. Añadir el valor encima de cada barra
-for barra in plt.gca().patches:
-    yval = barra.get_height()
-    plt.text(barra.get_x() + barra.get_width()/2, yval + 0.2, yval, ha='center', va='bottom')
-
-plt.tight_layout()
-plt.show()
 
 # 1. Definimos nuestro "umbral" de alerta
 # Es mejor usar una variable para poder cambiarla fácilmente en el futuro
