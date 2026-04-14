@@ -1,0 +1,382 @@
+ # -------------------------------------------------------------------------
+# PREPARACIÓN: Darle al robot las herramientas que necesita
+# -------------------------------------------------------------------------
+
+import requests
+import time
+
+# --- CONFIGURACIÓN ---
+# En vez de escribir la API Key aquí, la pedimos al usuario
+api_key = input("🔑 Introduce tu API Key de AEMET: ")
+
+url_aemet = "https://opendata.aemet.es/opendata/api/observacion/convencional/todas"
+headers = {'cache-control': "no-cache", 'api_key': api_key}
+
+# --- VIAJE 1: Pedir permiso y dirección secreta ---
+print("🤖 Robot: Hola AEMET, ¿me das permiso para ver el clima de hoy?")
+respuesta_1 = requests.get(url_aemet, headers=headers)
+datos_permiso = respuesta_1.json()
+
+if datos_permiso['estado'] == 200:
+    url_secreta = datos_permiso['datos']
+    print(f"✅ Robot: ¡Permiso concedido! La dirección del paquete es: {url_secreta}")
+
+    # --- VIAJE 2: Ir a la dirección secreta ---
+    print("🤖 Robot: Yendo a la dirección secreta a por los datos reales...")
+    respuesta_final = requests.get(url_secreta)
+
+    datos_climaticos = respuesta_final.json()
+
+    print("📊 Robot: ¡He traído los datos! Aquí tienes una muestra de las primeras estaciones:")
+    print(datos_climaticos[:2])
+
+else:
+    print(f"❌ Error: AEMET dice: {datos_permiso['descripcion']}")
+
+import pandas as pd # Importamos Pandas con el apodo 'pd' (es el estándar)
+
+# --- (Imagina que aquí arriba está el código del "Segundo Viaje" que ya hicimos) ---
+# Supongamos que 'datos_climaticos' es la lista de fichas que trajo el robot
+
+# 1. La magia de una sola línea:
+# Le decimos a Pandas: "Coge esta lista de fichas (JSON) y conviértela en una tabla"
+tabla_clima = pd.DataFrame(datos_climaticos)
+
+# 2. El robot nos enseña la tabla limpia
+print("✨ Robot: ¡Tachán! He organizado los datos en una tabla:")
+print(tabla_clima.head()) # '.head()' le dice al robot: "enséñame solo las primeras 5 filas"
+
+# 3. Guardar el trabajo para GitHub o Excel
+# Podemos guardar esta tabla en un archivo .csv (compatible con Excel)
+tabla_clima.to_csv("datos_aemet_final.csv", index=False)
+print("💾 Robot: He guardado la tabla en un archivo llamado 'datos_aemet_final.csv'")
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Supongamos que ya tienes tu DataFrame 'tabla_clima' con datos de AEMET
+# Asegúrate de que la columna 'ubi' contiene el nombre de las estaciones y 'ta' las temperaturas
+
+# 1. Filtramos los datos de Tenerife
+# Importante: verifica que 'Tenerife' esté escrito exactamente igual en tu tabla
+datos_tenerife = tabla_clima[tabla_clima['ubi'].str.contains('Tenerife', case=False)].copy()
+
+# Verificación rápida: si no hay datos, el gráfico saldrá en blanco
+if datos_tenerife.empty:
+    print("❌ Error: No hay datos para 'Tenerife'. Revisa el nombre en la columna 'ubi'.")
+else:
+    # 2. Calculamos extremos
+    max_temp = datos_tenerife['ta'].max()
+    min_temp = datos_tenerife['ta'].min()
+
+    # 3. Asignamos colores
+    colores = []
+    for temperatura in datos_tenerife['ta']:
+        if temperatura == max_temp:
+            colores.append('red')
+        elif temperatura == min_temp:
+            colores.append('blue')
+        else:
+            colores.append('lightgrey')
+
+    # 4. Configuración del lienzo
+    plt.figure(figsize=(14, 7))
+
+    # 5. Creamos el gráfico
+    # Usamos el índice como eje X (puedes cambiarlo por 'fec' si tienes columna de fecha)
+    plt.bar(range(len(datos_tenerife)), datos_tenerife['ta'], color=colores)
+
+    # 6. Títulos y etiquetas
+    plt.title('Temperaturas en Tenerife', fontsize=16)
+    plt.ylabel('Grados Celsius (°C)')
+    plt.xlabel('Número de medición')
+
+# Guardar la imagen
+plt.savefig("grafica_temperatura_Tenerife.png", dpi=300, bbox_inches='tight')
+
+    # --- PASO CLAVE PARA VISUALIZACIÓN ---
+    plt.show() # Obliga a Python a mostrar el dibujo aquí mismo
+import matplotlib.pyplot as plt
+
+# 2. Preparamos los datos (aquí tomamos solo las 10 primeras estaciones para no sobrecargar el gráfico)
+top_10_tenerife = tenerife_data.head(10)
+
+# 3. Configuramos el dibujo
+plt.figure(figsize=(12, 6))  # Definimos el tamaño del lienzo (ancho y alto)
+
+# 4. Dibujamos las barras
+# 'ubi' es el nombre de la ciudad y 'ta' es la temperatura
+plt.bar(top_10_tenerife['ubi'], top_10_tenerife['ta'], color='green')
+
+# 5. Ponemos "carteles" para que se entienda
+plt.title('Temperatura actual en las estaciones de AEMET en Tenerife', fontsize=30)
+plt.xlabel('Ciudad / Estación', fontsize=12)
+plt.ylabel('Temperatura (°C)', fontsize=12)
+
+# Giramos los nombres de las estaciones para que no se choquen entre ellos
+plt.xticks(rotation=45, ha='right')
+
+# Guardar la imagen
+plt.savefig("grafica_temperaturas.png", dpi=300, bbox_inches='tight')
+
+# 6. ¡Mostramos la obra de arte!
+plt.show()
+
+from datetime import datetime # La herramienta para manejar fechas
+
+# 1. El robot mira la fecha de hoy
+# Le pedimos que la escriba en formato: Año-Mes-Día
+fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+
+# 2. Creamos un nombre de archivo dinámico
+# Usamos una 'f' antes de las comillas para poder meter la variable entre llaves {}
+nombre_archivo = f"clima_canarias_{fecha_hoy}.csv"
+
+# 3. Guardamos la tabla con ese nombre único
+tabla_clima.to_csv(nombre_archivo, index=False)
+
+print(f"✅ Robot: ¡Misión cumplida! He guardado los datos en '{nombre_archivo}'")
+
+# 1. Filtramos los datos para obtener solo las estaciones de Tenerife
+tenerife_data = tabla_clima[tabla_clima['ubi'].str.contains('Tenerife', case=False)]
+
+# 2. Encontrar la temperatura más alta y la más baja de las estaciones de Tenerife
+temp_maxima_tenerife = tenerife_data['ta'].max()
+temp_minima_tenerife = tenerife_data['ta'].min()
+
+print(f"🌡️ La temperatura más alta registrada en Tenerife es: {temp_maxima_tenerife}°C")
+print(f"❄️ La temperatura más baja registrada en Tenerife es: {temp_minima_tenerife}°C")
+
+# 3. ¿Pero qué ciudades son esas?
+# Buscamos la FILA completa donde la temperatura coincide con el máximo
+ciudad_mas_calorosa = tenerife_data[tenerife_data['ta'] == temp_maxima_tenerife]
+ciudad_mas_fria = tenerife_data[tenerife_data['ta'] == temp_minima_tenerife]
+
+# 4. Mostramos el nombre de la ciudad y su temperatura
+# '.values[0]' se usa para sacar el texto limpio de la tabla
+print(f"🔥 La ciudad más calurosa en Tenerife es {ciudad_mas_calorosa['ubi'].values[0]} con {temp_maxima_tenerife}°C")
+print(f"🧊 La ciudad más fría en Tenerife es {ciudad_mas_fria['ubi'].values[0]} con {temp_minima_tenerife}°C")
+
+
+# Agrupar por estación y calcular máximos y mínimos de temperatura
+resumen_ciudades = tenerife_data.groupby('ubi')['ta'].agg(['max', 'min'])
+
+print("📋 Resumen de extremos por cada ciudad de Tenerife:")
+print(resumen_ciudades)
+
+import matplotlib.pyplot as plt
+
+
+# 2. Preparamos una muestra de datos (las primeras 15 estaciones de Tenerife)
+muestra_grafico = tenerife_data.head(200).copy()
+
+# 3. Calculamos quién es el máximo y el mínimo en esta muestra
+max_ta = muestra_grafico['ta'].max()
+min_ta = muestra_grafico['ta'].min()
+
+# 4. Creamos una lista de colores
+colores = []
+for temperatura in muestra_grafico['ta']:
+    if temperatura == max_ta:
+        colores.append('red')      # Máximo
+    elif temperatura == min_ta:
+        colores.append('blue')     # Mínimo
+    else:
+        colores.append('lightgrey')  # Resto
+
+# 5. Dibujamos el lienzo
+plt.figure(figsize=(14, 7))
+
+# 6. Gráfico de barras
+plt.bar(muestra_grafico['ubi'], muestra_grafico['ta'], color=colores)
+
+# 7. Títulos y etiquetas
+plt.title('Comparativa de Temperaturas en Tenerife: Identificando Extremos', fontsize=16, fontweight='bold')
+plt.ylabel('Temperatura (°C)', fontsize=12)
+plt.xlabel('Estaciones Meteorológicas', fontsize=12)
+plt.xticks(rotation=45, ha='right')
+
+# 8. Añadir el valor encima de cada barra
+for barra in plt.gca().patches:
+    yval = barra.get_height()
+    plt.text(barra.get_x() + barra.get_width()/2, yval + 0.2, yval, ha='center', va='bottom')
+
+plt.tight_layout()
+plt.show()
+
+# 1. Definimos nuestro "umbral" de alerta
+# Es mejor usar una variable para poder cambiarla fácilmente en el futuro
+limite_calor = 20.0
+
+print(f"🕵️ Robot: Iniciando vigilancia... (Límite configurado: {limite_calor}°C)")
+print("-" * 50)
+
+# 2. Buscamos qué ciudades superan ese límite
+# Creamos una "sub-tabla" solo con las ciudades calurosas
+ciudades_en_alerta = tabla_clima[tabla_clima['ta'] >= limite_calor]
+
+# 3. El robot toma una decisión:
+# 'len()' cuenta cuántas filas hay en esa sub-tabla
+if len(ciudades_en_alerta) > 0:
+    print(f"⚠️ ¡ATENCIÓN! Se han detectado {len(ciudades_en_alerta)} estaciones con temperaturas altas:")
+
+    # Recorremos la lista de ciudades en alerta para dar los detalles
+    for indice, fila in ciudades_en_alerta.iterrows():
+        nombre = fila['ubi']
+        temperatura = fila['ta']
+        print(f"🔴 ALERTA en {nombre}: {temperatura}°C")
+else:
+    print("✅ Robot: Todo bajo control. Ninguna estación supera el límite de calor.")
+
+# Si hay alertas, guardamos un archivo especial de incidencias
+if not ciudades_en_alerta.empty:
+    nombre_alerta = f"ALERTA_CALOR_{fecha_hoy}.csv"
+    ciudades_en_alerta.to_csv(nombre_alerta, index=False)
+    print(f"📝 Se ha generado un registro de incidencias en: {nombre_alerta}")
+# 1. Importamos el "cerebro" de predicción
+from sklearn.linear_model import LinearRegression
+import numpy as np
+
+# 2. Preparamos los datos
+# Supongamos que 'X' son las horas del día (9, 10, 11, 12...)
+# Y 'y' son las temperaturas que ha leído el robot
+X = np.array([9, 10, 11, 12, 13, 14]).reshape(-1, 1) # Horas
+y = np.array([18, 19, 21, 22, 24, 25])             # Temperaturas reales
+
+# 3. Creamos el modelo de predicción
+modelo = LinearRegression()
+
+# 4. ENTRENAMIENTO: El robot estudia los datos para aprender la tendencia
+modelo.fit(X, y)
+
+# 5. PREDICCIÓN: Le preguntamos "¿Qué temperatura hará a las 16:00?"
+hora_futura = np.array([[16]])
+prediccion = modelo.predict(hora_futura)
+
+print(f"🔮 Robot: Según la tendencia, a las 16:00 hará unos {prediccion[0]:.2f}°C")
+# Dibujamos los puntos reales
+plt.scatter(X, y, color='blue', label='Datos reales')
+
+# Dibujamos la línea que el robot cree que sigue el clima
+plt.plot(X, modelo.predict(X), color='red', label='Línea de tendencia')
+
+plt.title('Predicción del robot: ¿Hacia dónde va la temperatura?')
+plt.xlabel('Hora del día')
+plt.ylabel('Temperatura (°C)')
+plt.legend()
+plt.show()
+
+# 1. Herramientas necesarias
+from sklearn.linear_model import LinearRegression
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# 2. Imaginemos que nuestra 'tabla_clima' tiene datos de una estación
+# a lo largo del tiempo (ej. de 8:00 a 13:00)
+datos_estacion = {
+    'hora': [8, 9, 10, 11, 12, 13],
+    'temp': [16.5, 17.2, 18.5, 20.1, 21.4, 23.0]
+}
+df_pred = pd.DataFrame(datos_estacion)
+
+# 3. Preparar los datos para la IA
+# El robot necesita las horas en una columna vertical (X) y las temperaturas en otra (y)
+X = df_pred['hora'].values.reshape(-1, 1)
+y = df_pred['temp'].values
+
+# 4. Crear y entrenar el modelo (El robot estudia la tendencia)
+IA_clima = LinearRegression()
+IA_clima.fit(X, y)
+
+# 5. Predecir la temperatura de la próxima hora (las 14:00)
+proxima_hora = [[14]]
+prediccion = IA_clima.predict(proxima_hora)
+
+print(f"🔮 Predicción IA: A las 14:00 la temperatura estimada es de {prediccion[0]:.2f}°C")
+
+# 6. Dibujar la "Recta de Predicción"
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, color='blue', label='Datos reales medidos') # Puntos reales
+plt.plot(X, IA_clima.predict(X), color='red', linewidth=2, label='Tendencia calculada') # Línea de la IA
+plt.scatter(proxima_hora, prediccion, color='green', marker='*', s=200, label='Predicción futura') # Estrellita futura
+
+plt.title('Modelo de Predicción Lineal: Tendencia Térmica')
+plt.xlabel('Hora del día')
+plt.ylabel('Temperatura (°C)')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.6)
+
+# Guardar la imagen
+plt.savefig("grafica_recta_prediccion.png", dpi=300, bbox_inches='tight')
+
+plt.show()
+
+
+# 1. Obtenemos la 'pendiente' (slope) de la línea de la IA
+# La pendiente nos dice cuántos grados sube o baja el clima por cada hora
+pendiente = IA_clima.coef_[0]
+
+print(f"📊 Análisis de tendencia: {pendiente:.2f} °C por hora.")
+print("-" * 50)
+
+# 2. El Robot decide qué consejo dar
+if pendiente > 1.0:
+    consejo = "🔥 ¡Cuidado! El calor está subiendo rápidamente. Hidrátate y busca sombra."
+elif pendiente > 0:
+    consejo = "☀️ El día se está calentando suavemente. Disfruta del sol con precaución."
+elif pendiente < -1.0:
+    consejo = "🧊 ¡Atención! La temperatura está bajando de golpe. Coge una chaqueta."
+else:
+    consejo = "☁️ El clima está muy estable ahora mismo. No se esperan cambios bruscos."
+
+print(f"🤖 CONSEJO DEL ROBOT: {consejo}")
+
+# ---------------------------------------------------------
+# GENERAR INFORME DE SITUACIÓN
+# ---------------------------------------------------------
+
+# 1. Preparar los datos clave del informe
+ciudad_max = ciudad_mas_calorosa['ubi'].values[0]
+ciudad_min = ciudad_mas_fria['ubi'].values[0]
+
+valor_max = temp_maxima_tenerife
+valor_min = temp_minima_tenerife
+
+tendencia = pendiente
+prediccion_1h = prediccion[0]
+
+estado_alerta = "☒ ¡Alerta Amarilla por calor!" if limite_calor <= valor_max else "☑ Sin alertas"
+recomendacion = consejo
+
+# 2. Crear el contenido del informe
+informe = f"""
+===========================================================
+                 INFORME DE SITUACIÓN - AEMET
+===========================================================
+
+📍 Fecha del informe: {fecha_hoy}
+
+-----------------------------------------------------------
+ Dato Analizado                         Valor / Resultado
+-----------------------------------------------------------
+
+Ciudad con Máxima:                      {ciudad_max} ({valor_max}°C)
+Ciudad con Mínima:                      {ciudad_min} ({valor_min}°C)
+
+Tendencia IA:                           {'Ascendente' if tendencia > 0 else 'Descendente'} ({tendencia:.2f} °C/h)
+Predicción para +1 hora:                {prediccion_1h:.2f}°C
+
+Estado de Alerta:                       {estado_alerta}
+
+Recomendación:                          {recomendacion}
+
+===========================================================
+"""
+
+# 3. Guardar el informe en un archivo
+with open("informe_de_situacion.txt", "w", encoding="utf-8") as f:
+    f.write(informe)
+
+print("📄 Informe de situación generado: informe_de_situacion.txt")
+
